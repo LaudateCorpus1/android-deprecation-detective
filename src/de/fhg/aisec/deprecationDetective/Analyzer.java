@@ -2,8 +2,6 @@ package de.fhg.aisec.deprecationDetective;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -31,13 +29,8 @@ public class Analyzer {
 		for (File classFile : findClasses(tempDir.toFile())) {
 			try {
 				Class<?> c = getClassFromFile(tempDir.toString() + "/", classFile.toString().replace(tempDir.toString() + "/", "").replace("/", "."));
-				for (Annotation a : c.getAnnotations()) {
-					if(a.annotationType().equals(java.lang.Deprecated.class)) {
-						classes.add(c);
-						for(Method m : c.getDeclaredMethods()) {
-							System.out.println(m.toString());
-						}
-					}
+				if(c.isAnnotationPresent(java.lang.Deprecated.class)) {
+					classes.add(c);					
 				}
 			} catch (Exception e) {
 				log.log(Level.SEVERE, "Something with the classloader and the class paths went wrong. Aborting!");
@@ -125,5 +118,12 @@ public class Analyzer {
 	    Class<?> cla = loader.loadClass(className.replace(".class", ""));
 	    loader.close();
 	    return cla;
+	}
+	
+	@SuppressWarnings("unused")
+	private static ClassLoader getClassLoaderFromJar(String directory) throws Exception {
+		return new URLClassLoader(new URL[] {
+	            new URL("file://" + directory)
+	    });
 	}
 }
