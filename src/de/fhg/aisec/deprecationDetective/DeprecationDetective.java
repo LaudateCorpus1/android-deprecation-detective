@@ -41,6 +41,13 @@ public class DeprecationDetective {
 			for (Class<?> className : Analyzer.getDeprecatedClasses(parser.getPath(sdkVersion))) {
 				out.addEntry(className, sdkVersion);
 			}
+			// Build a list of non-deprecated classes basing on the latest SDK. This is useful
+			// in order to differentiate between SDK classes and classes from the app
+			if(sdkVersion == parser.getMaxSDK()) {
+				for(Class<?> className : Analyzer.getNonDeprecatedClasses(parser.getPath(sdkVersion))) {
+					out.addEntry(className, -1);
+				}
+			}
 		}
 		log.log(Level.INFO, "Wrtiting to file " + output);
 		out.write();

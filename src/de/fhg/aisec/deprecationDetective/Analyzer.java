@@ -40,6 +40,25 @@ public class Analyzer {
 		deleteDirectory(tempDir.toFile());
 		return classes;
 	}
+	
+	public static List<Class<?>> getNonDeprecatedClasses(File path) {
+		log = Logger.getLogger("DeprecationDetective");
+		List<Class<?>> classes = new LinkedList<Class<?>>();
+		Path tempDir = unzip(path + "/android.jar");
+		for (File classFile : findClasses(tempDir.toFile())) {
+			try {
+				Class<?> c = getClassFromFile(tempDir.toString() + "/", classFile.toString().replace(tempDir.toString() + "/", "").replace("/", "."));
+				if(!c.isAnnotationPresent(java.lang.Deprecated.class)) {
+					classes.add(c);					
+				}
+			} catch (Exception e) {
+				log.log(Level.SEVERE, "Something with the classloader and the class paths went wrong. Aborting!");
+				System.exit(1);
+			} 
+		}
+		deleteDirectory(tempDir.toFile());
+		return classes;
+	}
 
 	/**
 	 * Unzips the file located at path to a directory in the systems temp folder.
