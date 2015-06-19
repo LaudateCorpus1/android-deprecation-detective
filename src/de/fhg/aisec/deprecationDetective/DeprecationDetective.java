@@ -37,6 +37,9 @@ public class DeprecationDetective {
 			System.exit(1);
 		}
 		for(int sdkVersion : parser.getSDKVersions()) {
+//			if(sdkVersion != parser.getMaxSDK()) {
+//				continue;
+//			}
 			log.log(Level.INFO, "Searching for deprecated classes in API level " + sdkVersion);
 			for (Class<?> className : Analyzer.getDeprecatedClasses(parser.getPath(sdkVersion))) {
 				out.addEntry(className, sdkVersion);

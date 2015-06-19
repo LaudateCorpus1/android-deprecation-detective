@@ -2,6 +2,7 @@ package de.fhg.aisec.deprecationDetective;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -26,11 +27,33 @@ public class Analyzer {
 		log = Logger.getLogger("DeprecationDetective");
 		List<Class<?>> classes = new LinkedList<Class<?>>();
 		Path tempDir = unzip(path + "/android.jar");
+		ClassLoader androidjar = null;
+		try {
+			androidjar = getClassLoaderFromJar(path + "/android.jar");
+		} catch (Exception e) {
+			log.log(Level.SEVERE, "Something went wrong loading the android jar into the classloader. Aborting");
+			System.exit(1);
+		}
 		for (File classFile : findClasses(tempDir.toFile())) {
 			try {
 				Class<?> c = getClassFromFile(tempDir.toString() + "/", classFile.toString().replace(tempDir.toString() + "/", "").replace("/", "."));
 				if(c.isAnnotationPresent(java.lang.Deprecated.class)) {
 					classes.add(c);					
+				}
+				// It seems that Java's classloader/reflection API needs access to a class
+				// 'baz' if there's a method in class 'foo' that looks like this: 
+				// <modifiers> bar(baz <name>) { ... }
+				// Unfortunately, it's no that easy to iterate over the classes a classloader knows,
+				// so we use the information from above (we know all classes / their names because of the .class files)
+				// and load the whole android.jar with the classloader. After that we can get the classes by name and iterate
+				// over their methods (hopefully) without any errors because the classloader knows all related classes now.
+				if(androidjar != null) {
+					Class<?> classWithContext = androidjar.loadClass(c.getName());
+					for(Method method : classWithContext.getMethods()) {
+						if(method.isAnnotationPresent(java.lang.Deprecated.class)) {
+//							System.out.println("L"+classWithContext.getName() + ";->" + method.getName() + "()L" + method.getReturnType().getName()+";");
+						}
+					}
 				}
 			} catch (Exception e) {
 				log.log(Level.SEVERE, "Something with the classloader and the class paths went wrong. Aborting!");
@@ -139,7 +162,6 @@ public class Analyzer {
 	    return cla;
 	}
 	
-	@SuppressWarnings("unused")
 	private static ClassLoader getClassLoaderFromJar(String directory) throws Exception {
 		return new URLClassLoader(new URL[] {
 	            new URL("file://" + directory)
