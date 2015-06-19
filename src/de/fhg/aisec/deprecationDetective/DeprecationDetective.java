@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 public class DeprecationDetective {
 	private static String cwd = Paths.get("").toAbsolutePath().toString(); // the directory this class is invoked from
 	//////////////// CHANGE ME /////////////////////////////////
-	static String output = cwd + "/deprecated.xml";
+	static String output = cwd + "/deprecatedClasses.xml";
 	static String sdkLocation = "/opt/android-sdk/platforms/";
 	
 	/**
