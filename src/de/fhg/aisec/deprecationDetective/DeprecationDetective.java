@@ -2,6 +2,7 @@ package de.fhg.aisec.deprecationDetective;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Method;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,8 +27,7 @@ public class DeprecationDetective {
 	public static void main(String[] args) {
 		Logger log = Logger.getLogger("DeprecationDetective");
 		SDKParser parser = null;
-		XMLExporter out = new XMLExporter(new File(output));
-		
+		XMLExporter xmlOut = new XMLExporter(new File(output));
 		try {
 			log.log(Level.INFO, "Parsing sdkLocation");
 			parser = new SDKParser(new File(sdkLocation));
@@ -37,23 +37,33 @@ public class DeprecationDetective {
 			System.exit(1);
 		}
 		for(int sdkVersion : parser.getSDKVersions()) {
-//			if(sdkVersion != parser.getMaxSDK()) {
-//				continue;
-//			}
-			log.log(Level.INFO, "Searching for deprecated classes in API level " + sdkVersion);
-			for (Class<?> className : Analyzer.getDeprecatedClasses(parser.getPath(sdkVersion))) {
-				out.addEntry(className, sdkVersion);
+			log.log(Level.INFO, "Searching for deprecated items in API level " + sdkVersion);
+			Analyzer currentSDKAnalyzer = new Analyzer(parser.getPath(sdkVersion));
+			
+			// Get all deprecated classes and methods
+			for (Class<?> className : currentSDKAnalyzer.getDeprecatedClasses()) {
+				xmlOut.addEntryForDeprecatedClass(className, sdkVersion);
 			}
-			// Build a list of non-deprecated classes basing on the latest SDK. This is useful
-			// in order to differentiate between SDK classes and classes from the app
+			for(Method method : currentSDKAnalyzer.getDeprecatedMethods()) {
+				xmlOut.addEntryForDeprecatedMethod(method, sdkVersion);
+			}
+			
+			// Build a list of non-deprecated classes and methods basing on the latest SDK. This is useful
+			// in order to differentiate between SDK classes/methods and classes/methods from the app
 			if(sdkVersion == parser.getMaxSDK()) {
-				for(Class<?> className : Analyzer.getNonDeprecatedClasses(parser.getPath(sdkVersion))) {
-					out.addEntry(className, -1);
+				log.log(Level.INFO, "Searching for non-deprecated items in latest available API level " + sdkVersion);
+				for(Class<?> className : currentSDKAnalyzer.getNonDeprecatedClasses()) {
+					xmlOut.addEntryForNonDeprecatedClass(className);
+				}
+				for(Method method : currentSDKAnalyzer.getDeprecatedMethods()) {
+					xmlOut.addEntryForNonDeprecatedMethod(method);
 				}
 			}
+			
+			currentSDKAnalyzer.cleanUp(); // Important! Deletes the files extracted from the Android SDK
 		}
 		log.log(Level.INFO, "Wrtiting to file " + output);
-		out.write();
+		xmlOut.write();
 		log.log(Level.INFO, "Finished!");
 	}
 }

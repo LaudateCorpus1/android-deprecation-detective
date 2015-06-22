@@ -23,13 +23,68 @@ import net.lingala.zip4j.exception.ZipException;
  */
 public class Analyzer {
 	private static Logger log;
-	public static List<Class<?>> getDeprecatedClasses(File path) {
+	private Path tempDir;
+	private File sdkPath;
+	
+	public Analyzer(File path) {
 		log = Logger.getLogger("DeprecationDetective");
-		List<Class<?>> classes = new LinkedList<Class<?>>();
-		Path tempDir = unzip(path + "/android.jar");
+		sdkPath = path;
+		tempDir = unzip(sdkPath + "/android.jar");
+	}
+	
+	/**
+	 * Deletes the temporary directory that stores the unzipped jar contents.
+	 * If you like your RAM, consider calling this method when you're done ;)
+	 */
+	public void cleanUp() {
+		deleteDirectory(tempDir.toFile());
+	}
+	
+	/**
+	 * Returns a list containing all classes with the @Deprecated annotation set or not
+	 * @param deprecated control if classes that are deprecated or not are returned. 
+	 * @return
+	 */
+	private List<Class<?>> getClasses(boolean deprecated) {
+		List<Class<?>> listOfClasses = new LinkedList<Class<?>>();
+		for (File classFile : findClasses(tempDir.toFile())) {
+			try {
+				Class<?> c = getClassFromFile(tempDir.toString() + "/", classFile.toString().replace(tempDir.toString() + "/", "").replace("/", "."));
+				if(c.isAnnotationPresent(java.lang.Deprecated.class) == deprecated) {
+					listOfClasses.add(c);					
+				}
+			} catch (Exception e) {
+				log.log(Level.SEVERE, "Something with the classloader and the class paths went wrong. Aborting!");
+				System.exit(1);
+			} 
+		}
+		return listOfClasses;
+	}
+	
+	/**
+	 * @return A list of all classes that are labeled with the @Deprecated Annotation
+	 */
+	public List<Class<?>> getDeprecatedClasses() {	
+		return getClasses(true);
+	}
+	
+	/**
+	 * @return A list of all classes that are not labeled with the @Deprecated Annotation
+	 */
+	public List<Class<?>> getNonDeprecatedClasses() {
+		return getClasses(false);
+	}
+	
+	/**
+	 * Returns a list containing all methods with the @Deprecated annotation set or not
+	 * @param deprecated control if methods that are deprecated or not are returned. 
+	 * @return
+	 */
+	private List<Method> getMethods(boolean deprecated) {
+		List<Method> listOfMethods = new LinkedList<Method>();
 		ClassLoader androidjar = null;
 		try {
-			androidjar = getClassLoaderFromJar(path + "/android.jar");
+			androidjar = getClassLoaderFromJar(sdkPath + "/android.jar");
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Something went wrong loading the android jar into the classloader. Aborting");
 			System.exit(1);
@@ -37,9 +92,6 @@ public class Analyzer {
 		for (File classFile : findClasses(tempDir.toFile())) {
 			try {
 				Class<?> c = getClassFromFile(tempDir.toString() + "/", classFile.toString().replace(tempDir.toString() + "/", "").replace("/", "."));
-				if(c.isAnnotationPresent(java.lang.Deprecated.class)) {
-					classes.add(c);					
-				}
 				// It seems that Java's classloader/reflection API needs access to a class
 				// 'baz' if there's a method in class 'foo' that looks like this: 
 				// <modifiers> bar(baz <name>) { ... }
@@ -50,8 +102,8 @@ public class Analyzer {
 				if(androidjar != null) {
 					Class<?> classWithContext = androidjar.loadClass(c.getName());
 					for(Method method : classWithContext.getMethods()) {
-						if(method.isAnnotationPresent(java.lang.Deprecated.class)) {
-//							System.out.println("L"+classWithContext.getName() + ";->" + method.getName() + "()L" + method.getReturnType().getName()+";");
+						if(method.isAnnotationPresent(java.lang.Deprecated.class) == deprecated) {
+							listOfMethods.add(method);
 						}
 					}
 				}
@@ -60,27 +112,21 @@ public class Analyzer {
 				System.exit(1);
 			} 
 		}
-		deleteDirectory(tempDir.toFile());
-		return classes;
+		return listOfMethods;
 	}
 	
-	public static List<Class<?>> getNonDeprecatedClasses(File path) {
-		log = Logger.getLogger("DeprecationDetective");
-		List<Class<?>> classes = new LinkedList<Class<?>>();
-		Path tempDir = unzip(path + "/android.jar");
-		for (File classFile : findClasses(tempDir.toFile())) {
-			try {
-				Class<?> c = getClassFromFile(tempDir.toString() + "/", classFile.toString().replace(tempDir.toString() + "/", "").replace("/", "."));
-				if(!c.isAnnotationPresent(java.lang.Deprecated.class)) {
-					classes.add(c);					
-				}
-			} catch (Exception e) {
-				log.log(Level.SEVERE, "Something with the classloader and the class paths went wrong. Aborting!");
-				System.exit(1);
-			} 
-		}
-		deleteDirectory(tempDir.toFile());
-		return classes;
+	/**
+	 * @return A list of all methods that are labeled with the @Deprecated Annotation
+	 */
+	public List<Method> getDeprecatedMethods() {
+		return getMethods(true);
+	}
+	
+	/**
+	 * @return A list of all methods that are not labeled with the @Deprecated Annotation
+	 */
+	public List<Method> getNonDeprecatedMethods() {
+		return getMethods(false);
 	}
 
 	/**
@@ -162,9 +208,17 @@ public class Analyzer {
 	    return cla;
 	}
 	
+	/**
+	 * Loads a complete jar and returns the ClassLoader. 
+	 * @param directory
+	 * @return
+	 * @throws Exception
+	 */
 	private static ClassLoader getClassLoaderFromJar(String directory) throws Exception {
 		return new URLClassLoader(new URL[] {
 	            new URL("file://" + directory)
 	    });
 	}
+	
+	
 }
