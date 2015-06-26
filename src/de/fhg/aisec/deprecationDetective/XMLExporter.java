@@ -106,11 +106,7 @@ public class XMLExporter {
 		methods.appendChild(node);
 		node.setAttribute("name", m.getName());
 		node.setAttribute("class", m.getDeclaringClass().getName());
-		StringBuilder sb = new StringBuilder();
-		for (Class<?> paramTypeClass : m.getParameterTypes()) {
-			sb.append(paramTypeClass.getName() + " | ");
-		}
-		node.setAttribute("paramTypes", sb.toString());
+		node.setAttribute("paramTypes", join(Arrays.asList(m.getParameterTypes()).iterator(), " | "));
 	}
 	
 	/**
