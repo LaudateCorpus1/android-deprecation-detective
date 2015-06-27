@@ -1,3 +1,4 @@
 bin
 /build/
 /deprecatedResources.xml
+.gradle
