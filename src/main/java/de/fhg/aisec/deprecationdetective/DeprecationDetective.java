@@ -47,7 +47,6 @@ public class DeprecationDetective {
 	 * - Get all classes of each SDK and find the @Deprecated ones
 	 * - Write everything into the XML file determined by the output variable
 	 */
-	@SuppressWarnings("null")
 	public static void main(String[] args) {
 		// Parse args
 		List<String> argsl = Arrays.asList(args);
