@@ -125,7 +125,7 @@ public class Analyzer {
 				Class<?> c = getClassFromFile(tempDir.toString() + "/", classFile.toString().replace(tempDir.toString() + "/", "").replace("/", "."));
 				if (androidjar != null) {
 					Class<?> classWithContext = androidjar.loadClass(c.getName());
-					for (Method method : classWithContext.getMethods()) {
+					for (Method method : classWithContext.getDeclaredMethods()) {
 						if (method.isAnnotationPresent(java.lang.Deprecated.class) == deprecated) {
 							listOfMethods.add(method);
 						}

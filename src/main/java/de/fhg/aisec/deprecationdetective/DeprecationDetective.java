@@ -93,7 +93,7 @@ public class DeprecationDetective {
 				for(Class<?> className : currentSDKAnalyzer.getNonDeprecatedClasses()) {
 					xmlOut.addEntryForNonDeprecatedClass(className);
 				}
-				for(Method method : currentSDKAnalyzer.getDeprecatedMethods()) {
+				for(Method method : currentSDKAnalyzer.getNonDeprecatedMethods()) {
 					xmlOut.addEntryForNonDeprecatedMethod(method);
 				}
 			}
