@@ -36,7 +36,7 @@ import java.lang.reflect.Executable;
  */
 public class ClassMethodTuple {
 	private Class<?> classMethodIsAvailableIn;
-	private Executable accordingMethod;
+	private Executable accordingMethod; // The Executable type is the superclass of Method and Constructor - and really what we need here!:)
 	
 	public ClassMethodTuple(Class<?> classMethodIsAvailableIn, Executable accordMethod) {
 		this.classMethodIsAvailableIn = classMethodIsAvailableIn;
@@ -55,7 +55,4 @@ public class ClassMethodTuple {
 	public String toString() {
 		return classMethodIsAvailableIn.getName() + "." + accordingMethod.getName();
 	}
-	
-	
-
 }

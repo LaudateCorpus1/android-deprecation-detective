@@ -25,7 +25,7 @@ package de.fhg.aisec.deprecationdetective;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
+import java.lang.reflect.Executable;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -128,10 +128,11 @@ public class Analyzer {
 				Class<?> c = getClassFromFile(tempDir.toString() + "/", classFile.toString().replace(tempDir.toString() + "/", "").replace("/", "."));
 				if (androidjar != null) {
 					Class<?> classWithContext = androidjar.loadClass(c.getName());
-					HashSet<Method> allMethods = new HashSet<Method>();
+					HashSet<Executable> allMethods = new HashSet<Executable>();
 					allMethods.addAll(Arrays.asList(classWithContext.getDeclaredMethods()));
 					allMethods.addAll(Arrays.asList(classWithContext.getMethods()));
-					for (Method method : allMethods) {
+					allMethods.addAll(Arrays.asList(classWithContext.getConstructors()));
+					for (Executable method : allMethods) {
 						if (method.isAnnotationPresent(java.lang.Deprecated.class) == deprecated) {
 							listOfMethods.add(new ClassMethodTuple(classWithContext, method));
 						}
@@ -252,5 +253,4 @@ public class Analyzer {
 	private static ClassLoader getClassLoaderFromJar(String directory) throws Exception {
 		return new URLClassLoader(new URL[] { new URL("file://" + directory) });
 	}
-
 }

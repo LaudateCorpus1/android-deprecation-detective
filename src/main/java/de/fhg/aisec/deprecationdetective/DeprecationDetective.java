@@ -110,7 +110,6 @@ public class DeprecationDetective {
 		System.out.println("Options: ");
 		System.out.println("-h                      Show this help");
 		System.out.println("-s <android-sdk-dir>    Path to Android SDK platforms. Default: /opt/android-sdk/platforms");
-		System.out.println("-o <output file>        Name of output file. Default: deprecatedResources.xml");
-		
+		System.out.println("-o <output file>        Name of output file. Default: deprecatedResources.xml");	
 	}
 }
