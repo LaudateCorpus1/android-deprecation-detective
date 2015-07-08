@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 package de.fhg.aisec.deprecationdetective;
-import java.lang.reflect.Method;
+import java.lang.reflect.Executable;
 
 /**
  * This class is used for storing the mapping between a class and a certain method
@@ -36,9 +36,9 @@ import java.lang.reflect.Method;
  */
 public class ClassMethodTuple {
 	private Class<?> classMethodIsAvailableIn;
-	private Method accordingMethod;
+	private Executable accordingMethod;
 	
-	public ClassMethodTuple(Class<?> classMethodIsAvailableIn, Method accordMethod) {
+	public ClassMethodTuple(Class<?> classMethodIsAvailableIn, Executable accordMethod) {
 		this.classMethodIsAvailableIn = classMethodIsAvailableIn;
 		this.accordingMethod = accordMethod;
 	}
@@ -47,7 +47,7 @@ public class ClassMethodTuple {
 		return classMethodIsAvailableIn;
 	}
 
-	public Method getAccordingMethod() {
+	public Executable getAccordingMethod() {
 		return accordingMethod;
 	}
 

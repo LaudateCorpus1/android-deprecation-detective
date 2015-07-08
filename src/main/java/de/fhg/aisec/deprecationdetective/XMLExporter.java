@@ -24,9 +24,8 @@ SOFTWARE.
 package de.fhg.aisec.deprecationdetective;
 
 import java.io.File;
-import java.lang.reflect.Method;
+import java.lang.reflect.Executable;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -111,13 +110,13 @@ public class XMLExporter {
 	 * @param apiVersion
 	 */
 	public void addEntryForDeprecatedMethod(ClassMethodTuple relation, int apiVersion) {
-		Method method = relation.getAccordingMethod();
+		Executable method = relation.getAccordingMethod();
 		Class<?> classObject = relation.getClassMethodIsAvailableIn(); 
 		Element node = xmlDoc.createElement("deprecated");
 		methods.appendChild(node);
 		node.setAttribute("name", method.getName());
 		node.setAttribute("class", classObject.getName());
-		node.setAttribute("paramTypes", join(Arrays.asList(method.getParameterTypes()).iterator(), " | "));
+		node.setAttribute("paramTypes", String.join(" | ", Arrays.asList(method.getParameterTypes()).stream().map(e -> e.getName()).toArray(String[]::new)));
 		node.setAttribute("api", String.valueOf(apiVersion));
 	}
 	
@@ -127,13 +126,13 @@ public class XMLExporter {
 	 * @param apiVersion
 	 */
 	public void addEntryForNonDeprecatedMethod(ClassMethodTuple relation) {
-		Method method = relation.getAccordingMethod();
+		Executable method = relation.getAccordingMethod();
 		Class<?> classObject = relation.getClassMethodIsAvailableIn();
 		Element node = xmlDoc.createElement("non-deprecated");
 		methods.appendChild(node);
 		node.setAttribute("name", method.getName());
 		node.setAttribute("class", classObject.getName());
-		node.setAttribute("paramTypes", join(Arrays.asList(method.getParameterTypes()).iterator(), " | "));
+		node.setAttribute("paramTypes", String.join(" | ", Arrays.asList(method.getParameterTypes()).stream().map(e -> e.getName()).toArray(String[]::new)));
 	}
 	
 	/**
@@ -151,44 +150,5 @@ public class XMLExporter {
 		} catch (TransformerException e) {
 			log.log(Level.SEVERE, "Something went wrong while writing the file");
 		}
-	}
-	
-	/**
-	 * Join an Iterator with a separator String 
-	 * Taken from apache.commons.lang3.StringUtils and modified to print beautiful class names
-	 * http://commons.apache.org/proper/commons-lang/javadocs/api-release/org/apache/commons/lang3/StringUtils.html
-	 */
-	private static String join(final Iterator<Class<?>> iterator, final String separator) {
-		// handle null, zero and one elements before building a buffer
-		if (iterator == null) {
-			return null;
-		}
-		if (!iterator.hasNext()) {
-			return "";
-		}
-		final Object first = iterator.next();
-		if (!iterator.hasNext()) {
-			final String result = ((Class<?>)first).getName();
-			return result;
-		}
-
-		// two or more elements
-		final StringBuilder buf = new StringBuilder(256); // Java default is 16,
-															// probably too
-															// small
-		if (first != null) {
-			buf.append(((Class<?>)first).getName());
-		}
-
-		while (iterator.hasNext()) {
-			if (separator != null) {
-				buf.append(separator);
-			}
-			final Object obj = iterator.next();
-			if (obj != null) {
-				buf.append(((Class<?>)obj).getName());
-			}
-		}
-		return buf.toString();
 	}
 }
