@@ -107,29 +107,33 @@ public class XMLExporter {
 	
 	/**
 	 * Adds and entry for the given deprecated method and apiVersion in our XML file
-	 * @param m
+	 * @param relation
 	 * @param apiVersion
 	 */
-	public void addEntryForDeprecatedMethod(Method m, int apiVersion) {
+	public void addEntryForDeprecatedMethod(ClassMethodTuple relation, int apiVersion) {
+		Method method = relation.getAccordingMethod();
+		Class<?> classObject = relation.getClassMethodIsAvailableIn(); 
 		Element node = xmlDoc.createElement("deprecated");
 		methods.appendChild(node);
-		node.setAttribute("name", m.getName());
-		node.setAttribute("class", m.getDeclaringClass().getName());
-		node.setAttribute("paramTypes", join(Arrays.asList(m.getParameterTypes()).iterator(), " | "));
+		node.setAttribute("name", method.getName());
+		node.setAttribute("class", classObject.getName());
+		node.setAttribute("paramTypes", join(Arrays.asList(method.getParameterTypes()).iterator(), " | "));
 		node.setAttribute("api", String.valueOf(apiVersion));
 	}
 	
 	/**
 	 * Adds an entry for the given non-deprecated method.
-	 * @param m
+	 * @param relation
 	 * @param apiVersion
 	 */
-	public void addEntryForNonDeprecatedMethod(Method m) {
+	public void addEntryForNonDeprecatedMethod(ClassMethodTuple relation) {
+		Method method = relation.getAccordingMethod();
+		Class<?> classObject = relation.getClassMethodIsAvailableIn();
 		Element node = xmlDoc.createElement("non-deprecated");
 		methods.appendChild(node);
-		node.setAttribute("name", m.getName());
-		node.setAttribute("class", m.getDeclaringClass().getName());
-		node.setAttribute("paramTypes", join(Arrays.asList(m.getParameterTypes()).iterator(), " | "));
+		node.setAttribute("name", method.getName());
+		node.setAttribute("class", classObject.getName());
+		node.setAttribute("paramTypes", join(Arrays.asList(method.getParameterTypes()).iterator(), " | "));
 	}
 	
 	/**
