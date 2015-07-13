@@ -25,7 +25,6 @@ package de.fhg.aisec.deprecationdetective;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -82,8 +81,8 @@ public class DeprecationDetective {
 			for (Class<?> className : currentSDKAnalyzer.getDeprecatedClasses()) {
 				xmlOut.addEntryForDeprecatedClass(className, sdkVersion);
 			}
-			for(Method method : currentSDKAnalyzer.getDeprecatedMethods()) {
-				xmlOut.addEntryForDeprecatedMethod(method, sdkVersion);
+			for(ClassMethodTuple relation : currentSDKAnalyzer.getDeprecatedMethods()) {
+				xmlOut.addEntryForDeprecatedMethod(relation, sdkVersion);
 			}
 			
 			// Build a list of non-deprecated classes and methods basing on the latest SDK. This is useful
@@ -93,8 +92,8 @@ public class DeprecationDetective {
 				for(Class<?> className : currentSDKAnalyzer.getNonDeprecatedClasses()) {
 					xmlOut.addEntryForNonDeprecatedClass(className);
 				}
-				for(Method method : currentSDKAnalyzer.getDeprecatedMethods()) {
-					xmlOut.addEntryForNonDeprecatedMethod(method);
+				for(ClassMethodTuple relation : currentSDKAnalyzer.getNonDeprecatedMethods()) {
+					xmlOut.addEntryForNonDeprecatedMethod(relation);
 				}
 			}
 			
@@ -111,7 +110,6 @@ public class DeprecationDetective {
 		System.out.println("Options: ");
 		System.out.println("-h                      Show this help");
 		System.out.println("-s <android-sdk-dir>    Path to Android SDK platforms. Default: /opt/android-sdk/platforms");
-		System.out.println("-o <output file>        Name of output file. Default: deprecatedResources.xml");
-		
+		System.out.println("-o <output file>        Name of output file. Default: deprecatedResources.xml");	
 	}
 }

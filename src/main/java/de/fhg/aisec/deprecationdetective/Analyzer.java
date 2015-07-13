@@ -25,16 +25,19 @@ package de.fhg.aisec.deprecationdetective;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
+import java.lang.reflect.Executable;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 
@@ -111,8 +114,8 @@ public class Analyzer {
 	 *            control if methods that are deprecated or not are returned.
 	 * @return
 	 */
-	private List<Method> getMethods(boolean deprecated) {
-		List<Method> listOfMethods = new LinkedList<Method>();
+	private List<ClassMethodTuple> getMethods(boolean deprecated) {
+		List<ClassMethodTuple> listOfMethods = new LinkedList<ClassMethodTuple>();
 		ClassLoader androidjar = null;
 		try {
 			androidjar = getClassLoaderFromJar(sdkPath + "/android.jar");
@@ -125,9 +128,13 @@ public class Analyzer {
 				Class<?> c = getClassFromFile(tempDir.toString() + "/", classFile.toString().replace(tempDir.toString() + "/", "").replace("/", "."));
 				if (androidjar != null) {
 					Class<?> classWithContext = androidjar.loadClass(c.getName());
-					for (Method method : classWithContext.getMethods()) {
+					HashSet<Executable> allMethods = new HashSet<Executable>();
+					allMethods.addAll(Arrays.asList(classWithContext.getDeclaredMethods()));
+					allMethods.addAll(Arrays.asList(classWithContext.getMethods()));
+					allMethods.addAll(Arrays.asList(classWithContext.getConstructors()));
+					for (Executable method : allMethods) {
 						if (method.isAnnotationPresent(java.lang.Deprecated.class) == deprecated) {
-							listOfMethods.add(method);
+							listOfMethods.add(new ClassMethodTuple(classWithContext, method));
 						}
 					}
 				}
@@ -143,7 +150,7 @@ public class Analyzer {
 	 * @return A list of all methods that are labeled with the @Deprecated
 	 *         Annotation
 	 */
-	public List<Method> getDeprecatedMethods() {
+	public List<ClassMethodTuple> getDeprecatedMethods() {
 		return getMethods(true);
 	}
 
@@ -151,7 +158,7 @@ public class Analyzer {
 	 * @return A list of all methods that are not labeled with the @Deprecated
 	 *         Annotation
 	 */
-	public List<Method> getNonDeprecatedMethods() {
+	public List<ClassMethodTuple> getNonDeprecatedMethods() {
 		return getMethods(false);
 	}
 
@@ -246,5 +253,4 @@ public class Analyzer {
 	private static ClassLoader getClassLoaderFromJar(String directory) throws Exception {
 		return new URLClassLoader(new URL[] { new URL("file://" + directory) });
 	}
-
 }
